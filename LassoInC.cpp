@@ -21,7 +21,47 @@ double lasso_c(const arma::mat& Xtilde, const arma::colvec& Ytilde, const arma::
 // Lasso coordinate-descent on standardized data with one lamdba. Returns a vector beta.
 // [[Rcpp::export]]
 arma::colvec fitLASSOstandardized_c(const arma::mat& Xtilde, const arma::colvec& Ytilde, double lambda, const arma::colvec& beta_start, double eps = 0.001){
-  // Your function code goes here
+  int n = Xtilde.n_rows;
+  int p = Xtilde.n_cols;
+  
+  // Initialize beta
+  arma::colvec beta;
+  if (beta_start.n_elem == p) {
+    beta = beta_start;
+  } else {
+    beta = arma::zeros(p);
+  }
+  
+  // Initialize residual
+  arma::colvec r = Ytilde - Xtilde * beta;
+  
+  double f_prev = std::numeric_limits<double>::infinity();
+  double f_curr;
+  
+  repeat {
+    // One full cyclic sweep over coordinates
+    for (int j = 0; j < p; j++) {
+      // Add back current contribution of feature j to the residual
+      r += Xtilde.col(j) * beta(j);
+      
+      // With standardized columns, the update is soft(mean(xj * r), lambda)
+      double rho = arma::accu(Xtilde.col(j) % r) / n;
+      double beta_new_j = soft_c(rho, lambda);
+      
+      // Update residual and coefficient
+      r -= Xtilde.col(j) * beta_new_j;
+      beta(j) = beta_new_j;
+    }
+    
+    // Check convergence
+    f_curr = lasso_c(Xtilde, Ytilde, beta, lambda);
+    if ((f_prev - f_curr) < eps) {
+      break;
+    }
+    f_prev = f_curr;
+  }
+  
+  return beta;
 }  
 
 // Lasso coordinate-descent on standardized data with supplied lambda_seq. 
@@ -29,5 +69,20 @@ arma::colvec fitLASSOstandardized_c(const arma::mat& Xtilde, const arma::colvec&
 // Returns a matrix beta (p by number of lambdas in the sequence)
 // [[Rcpp::export]]
 arma::mat fitLASSOstandardized_seq_c(const arma::mat& Xtilde, const arma::colvec& Ytilde, const arma::colvec& lambda_seq, double eps = 0.001){
-  // Your function code goes here
+  int p = Xtilde.n_cols;
+  int n_lambda = lambda_seq.n_elem;
+  
+  // Initialize beta matrix
+  arma::mat beta_mat(p, n_lambda);
+  
+  // Warm start strategy: use previous solution as starting point for next lambda
+  arma::colvec beta_start;  // empty initially
+  
+  for (int i = 0; i < n_lambda; i++) {
+    arma::colvec beta = fitLASSOstandardized_c(Xtilde, Ytilde, lambda_seq(i), beta_start, eps);
+    beta_mat.col(i) = beta;
+    beta_start = beta;  // Warm start for next iteration
+  }
+  
+  return beta_mat;
 }
