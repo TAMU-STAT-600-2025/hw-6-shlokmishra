@@ -11,7 +11,11 @@ double soft_c(double a, double lambda){
 // Lasso objective function, returns scalar
 // [[Rcpp::export]]
 double lasso_c(const arma::mat& Xtilde, const arma::colvec& Ytilde, const arma::colvec& beta, double lambda){
-  // Your function code goes here
+  arma::colvec r = Ytilde - Xtilde * beta;
+  double n = Xtilde.n_rows;
+  double data_term = arma::accu(r % r) / (2.0 * n);
+  double pen_term = lambda * arma::accu(arma::abs(beta));
+  return data_term + pen_term;
 }
 
 // Lasso coordinate-descent on standardized data with one lamdba. Returns a vector beta.
