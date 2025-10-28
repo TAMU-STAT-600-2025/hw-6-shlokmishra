@@ -5,7 +5,7 @@ using namespace Rcpp;
 // Soft-thresholding function, returns scalar
 // [[Rcpp::export]]
 double soft_c(double a, double lambda){
-  // Your function code goes here
+  return std::copysign(std::max(std::abs(a) - lambda, 0.0), a);
 }
 
 // Lasso objective function, returns scalar
