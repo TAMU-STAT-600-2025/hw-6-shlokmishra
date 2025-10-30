@@ -109,12 +109,61 @@ test_fitLASSO_2()
 
 # Do microbenchmark on fitLASSOstandardized vs fitLASSOstandardized_c
 ######################################################################
+require(microbenchmark)
+
+mb_fitLASSO <- microbenchmark(
+  fitLASSOstandardized(Xtilde, Ytilde, 0.5),
+  fitLASSOstandardized_c(Xtilde, Ytilde, 0.5, numeric(0)),
+  times = 10
+)
+print(mb_fitLASSO)
+
 
 # Do at least 2 tests for fitLASSOstandardized_seq function below. You are checking output agreements on at least 2 separate inputs
 #################################################
 
+# Test 1: Short lambda sequence
+test_fitLASSO_seq_1 <- function() {
+  lambda_seq <- c(1.0, 0.5, 0.1)
+  result_r <- fitLASSOstandardized_seq(Xtilde, Ytilde, lambda_seq)
+  beta_mat_r <- as.matrix(result_r$beta_mat)
+  
+  beta_mat_cpp <- as.matrix(fitLASSOstandardized_seq_c(Xtilde, Ytilde, lambda_seq))
+  
+  cat("Test 1 (3 lambdas): Max difference =", max(abs(beta_mat_r - beta_mat_cpp)), "\n")
+  all.equal(beta_mat_r, beta_mat_cpp, tolerance = 1e-6, check.attributes = FALSE)
+}
+
+# Test 2: Longer lambda sequence
+test_fitLASSO_seq_2 <- function() {
+  set.seed(456)
+  lambda_seq <- sort(c(2.0, 1.0, 0.5, 0.2, 0.1), decreasing = TRUE)
+  result_r <- fitLASSOstandardized_seq(Xtilde, Ytilde, lambda_seq)
+  beta_mat_r <- as.matrix(result_r$beta_mat)
+  
+  beta_mat_cpp <- as.matrix(fitLASSOstandardized_seq_c(Xtilde, Ytilde, lambda_seq))
+  
+  cat("Test 2 (5 lambdas): Max difference =", max(abs(beta_mat_r - beta_mat_cpp)), "\n")
+  all.equal(beta_mat_r, beta_mat_cpp, tolerance = 1e-6, check.attributes = FALSE)
+}
+
+# Run tests
+test_fitLASSO_seq_1()
+test_fitLASSO_seq_2()
+
+
 # Do microbenchmark on fitLASSOstandardized_seq vs fitLASSOstandardized_seq_c
 ######################################################################
+
+lambda_seq_test <- sort(c(1.0, 0.8, 0.6, 0.4, 0.2, 0.1), decreasing = TRUE)
+
+mb_fitLASSO_seq <- microbenchmark(
+  fitLASSOstandardized_seq(Xtilde, Ytilde, lambda_seq_test),
+  fitLASSOstandardized_seq_c(Xtilde, Ytilde, lambda_seq_test),
+  times = 10
+)
+print(mb_fitLASSO_seq)
+
 
 # Tests on riboflavin data
 ##########################
