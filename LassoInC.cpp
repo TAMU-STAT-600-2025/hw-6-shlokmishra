@@ -5,7 +5,9 @@ using namespace Rcpp;
 // Soft-thresholding function, returns scalar
 // [[Rcpp::export]]
 double soft_c(double a, double lambda){
-  return std::copysign(std::max(std::abs(a) - lambda, 0.0), a);
+  double abs_a = std::abs(a);
+  if (abs_a <= lambda) return 0.0;
+  return (a > 0) ? (abs_a - lambda) : -(abs_a - lambda);
 }
 
 // Lasso objective function, returns scalar
@@ -38,7 +40,7 @@ arma::colvec fitLASSOstandardized_c(const arma::mat& Xtilde, const arma::colvec&
   double f_prev = std::numeric_limits<double>::infinity();
   double f_curr;
   
-  repeat {
+  while(true) {
     // One full cyclic sweep over coordinates
     for (int j = 0; j < p; j++) {
       // Add back current contribution of feature j to the residual

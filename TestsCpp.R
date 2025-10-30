@@ -12,6 +12,30 @@ source("LassoFunctions.R")
 # Do at least 2 tests for soft-thresholding function below. You are checking output agreements on at least 2 separate inputs
 #################################################
 
+# Test 1: Positive value
+test_soft_1 <- function() {
+  a <- 5.0
+  lambda <- 2.0
+  expected <- soft(a, lambda)
+  actual <- soft_c(a, lambda)
+  cat("Test 1 (positive): Expected =", expected, "Actual =", actual, "\n")
+  all.equal(expected, actual, tolerance = 1e-10)
+}
+
+# Test 2: Negative value
+test_soft_2 <- function() {
+  a <- -3.0
+  lambda <- 1.0
+  expected <- soft(a, lambda)
+  actual <- soft_c(a, lambda)
+  cat("Test 2 (negative): Expected =", expected, "Actual =", actual, "\n")
+  all.equal(expected, actual, tolerance = 1e-10)
+}
+
+# Run tests
+test_soft_1()
+test_soft_2()
+
 
 # Do at least 2 tests for lasso objective function below. You are checking output agreements on at least 2 separate inputs
 #################################################
