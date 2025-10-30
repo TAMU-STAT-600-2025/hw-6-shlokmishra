@@ -56,7 +56,8 @@ arma::colvec fitLASSOstandardized_c(const arma::mat& Xtilde, const arma::colvec&
     }
     
     // Check convergence
-    f_curr = lasso_c(Xtilde, Ytilde, beta, lambda);
+    // f_curr = lasso_c(Xtilde, Ytilde, beta, lambda);
+    f_curr = arma::accu(r % r) / (2.0 * n) + lambda * arma::accu(arma::abs(beta));
     if ((f_prev - f_curr) < eps) {
       break;
     }
